@@ -1,14 +1,14 @@
-#include "gl_Renderer.h"
+#include "YRendererCore/gpu/opengl/gl_Renderer.h"
 
-#include <glad/gl.h>
-#include <GLFW/glfw3.h>
+
 
 #include<iostream>
 
-#include "gl_VertexArray.h"
+#include <YRendererCore/gpu/opengl/gl_VertexArray.h>
 
 
 namespace YRenderer {
+
     GLenum glCheckError_(const char* file, int line)
     {
         GLenum errorCode;
@@ -28,16 +28,10 @@ namespace YRenderer {
             std::cout << error << " | " << file << " (" << line << ")" << std::endl;
         }
         return errorCode;
-    }
-#define glCheckError() glCheckError_(__FILE__, __LINE__)
+    };
+#define glCheckError() glCheckError_(__FILE__, __LINE__);
 
-    void APIENTRY glDebugOutput(GLenum source,
-        GLenum type,
-        unsigned int id,
-        GLenum severity,
-        GLsizei length,
-        const char* message,
-        const void* userParam)
+    void /*APIENTRY*/ glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* userParam)
     {
         if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return; // ignore these non-significant error codes
 
@@ -75,12 +69,12 @@ namespace YRenderer {
         case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
         } std::cout << std::endl;
         std::cout << std::endl;
-    }
+    };
 
     void gl_Renderer::platform_init()
     {
         //BLI_assert(!GPG.initialized);
-        
+
         std::cout << "OpenGL context initialized:" << std::endl;
         const char* vendor = (const char*)glGetString(GL_VENDOR);
         const char* renderer = (const char*)glGetString(GL_RENDERER);
@@ -110,18 +104,18 @@ namespace YRenderer {
                 version,
                 GPU_ARCHITECTURE_IMR);
         */
-    }
+    };
 
     gl_Renderer::gl_Renderer() /* bool gl_Renderer::init(GLFWwindow* pWindow) */
     {
         //glfwMakeContextCurrent(pWindow);
-
+        /*
         int version = gladLoadGL(glfwGetProcAddress);
         if (version == 0) {
             std::cout << "Failed to initialize OpenGL context\n";
-           // return -1;
+            // return -1;
         }
-        
+        */
         platform_init();
 
         int flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -135,6 +129,18 @@ namespace YRenderer {
         }
 
        // return true;
+    }
+
+    void gl_Renderer::DrawArrays(const VertexArray& vao, Primitive::primitive_t mode, GLuint offset, GLuint vertices)
+    {
+        vao.Bind(); //glBindVertexArray(vao);
+        glDrawArrays(mode, offset, vertices);
+    }
+
+    void gl_Renderer::DrawElements(const VertexArray& vao, Primitive::primitive_t mode, GLuint offset, GLuint count, GLuint type)
+    {
+        vao.Bind(); //glBindVertexArray(vao);
+        glDrawElements(mode, count, type, (const GLvoid*)offset);
     }
 
 

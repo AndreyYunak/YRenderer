@@ -3,11 +3,12 @@
 
 #include <YRendererCore/Application.hpp>
 
+
 class MyApp : public YRenderer::Application
 {
     virtual void on_update() override
     {
-       
+      // m_pWindow->m_render->DrawArrays();
     }
 
    

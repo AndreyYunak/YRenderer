@@ -10,3 +10,6 @@
 [submodule "external/assimp"]
 	path = external/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "external/glfwpp"]
+	path = external/glfwpp
+	url = https://github.com/janekb04/glfwpp.git

@@ -6,11 +6,40 @@ set(ENGINE_PROJECT_NAME		YRendererCore)
 set(ENGINE_PUBLIC_INCLUDES
 							includes/YRendererCore/Application.hpp
 							includes/YRendererCore/Event.hpp
+
+							includes/YRendererCore/Window.hpp
+							includes/YRendererCore/camera.h
+
+							includes/YRendererCore/gpu/opengl/gl_Renderer.h
+							includes/YRendererCore/gpu/opengl/gl_IndexBuffer.h
+							includes/YRendererCore/gpu/opengl/gl_ShaderProgram.h
+							includes/YRendererCore/gpu/opengl/gl_Texture.h
+							includes/YRendererCore/gpu/opengl/gl_VertexArray.h
+							includes/YRendererCore/gpu/opengl/gl_VertexBuffer.h
+							includes/YRendererCore/gpu/opengl/gl_VertexBufferLayout.h
+							includes/YRendererCore/gpu/opengl/stb_image.h
+							includes/YRendererCore/gpu/opengl/gl_Context.h
+
+							includes/YRendererCore/Scene.h
 )
 
 
 set(ENGINE_PRIVATE_INCLUDES
-							src/YRendererCore/Window.hpp
+							#src/YRendererCore/Window.hpp
+
+							#src/YRendererCore/gpu/opengl/gl_Renderer.h
+							#src/YRendererCore/gpu/opengl/gl_IndexBuffer.h
+							#src/YRendererCore/gpu/opengl/gl_ShaderProgram.h
+							#src/YRendererCore/gpu/opengl/gl_Texture.h
+							#src/YRendererCore/gpu/opengl/gl_VertexArray.h
+							#src/YRendererCore/gpu/opengl/gl_VertexBuffer.h
+							#src/YRendererCore/gpu/opengl/gl_VertexBufferLayout.h
+							#src/YRendererCore/gpu/opengl/stb_image.h
+							#src/YRendererCore/gpu/opengl/gl_Context.h
+)
+set(ENGINE_PRIVATE_SOURCES
+							src/YRendererCore/Application.cpp
+							src/YRendererCore/Window.cpp
 
 							src/YRendererCore/gpu/opengl/gl_Renderer.cpp
 							src/YRendererCore/gpu/opengl/gl_IndexBuffer.cpp
@@ -18,24 +47,25 @@ set(ENGINE_PRIVATE_INCLUDES
 							src/YRendererCore/gpu/opengl/gl_Texture.cpp
 							src/YRendererCore/gpu/opengl/gl_VertexArray.cpp
 							src/YRendererCore/gpu/opengl/gl_VertexBuffer.cpp
-)
-set(ENGINE_PRIVATE_SOURCES
-							src/YRendererCore/Application.cpp
-							src/YRendererCore/Window.cpp
+							src/YRendererCore/gpu/opengl/gl_Context.cpp
 
-							src/YRendererCore/gpu/opengl/gl_Renderer.h
-							src/YRendererCore/gpu/opengl/gl_IndexBuffer.h
-							src/YRendererCore/gpu/opengl/gl_ShaderProgram.h
-							src/YRendererCore/gpu/opengl/gl_Texture.h
-							src/YRendererCore/gpu/opengl/gl_VertexArray.h
-							src/YRendererCore/gpu/opengl/gl_VertexBuffer.h
-							src/YRendererCore/gpu/opengl/gl_VertexBufferLayout.h
-							src/YRendererCore/gpu/opengl/stb_image.h
+							src/YRendererCore/Scene.cpp
 )
+set(shader 
+	includes/YRendererCore/Shader/shader.vs
+	includes/YRendererCore/Shader/shader.frag
+	includes/YRendererCore/Shader/shader1.frag
+	includes/YRendererCore/Shader/shader1.vs
+	includes/YRendererCore/Shader/shader_texture.frag
+	includes/YRendererCore/Shader/shader_texture.vs
+	)
+
+
 set(ENGINE_ALL_SOURCES
 							${ENGINE_PUBLIC_INCLUDES}
 							${ENGINE_PRIVATE_INCLUDES}
 							${ENGINE_PRIVATE_SOURCES}
+							${shader}
 )
 
 add_library(${ENGINE_PROJECT_NAME} 
@@ -48,20 +78,22 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}
 
 
 target_include_directories(${ENGINE_PROJECT_NAME} PUBLIC includes)
+target_include_directories(${ENGINE_PROJECT_NAME} PUBLIC includes/YRendererCore/gpu/opengl)
 target_include_directories(${ENGINE_PROJECT_NAME} PRIVATE src)
+#target_include_directories(${ENGINE_PROJECT_NAME} PUBLIC src)
+
 
 target_compile_features(${ENGINE_PROJECT_NAME} PUBLIC cxx_std_17)
 
 
-
-add_subdirectory(../external/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
-target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glfw)
+#add_subdirectory(../external/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
+#target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glfw)
 
 add_subdirectory(../external/glad ${CMAKE_CURRENT_BINARY_DIR}/glad)
-target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glad)
+target_link_libraries(${ENGINE_PROJECT_NAME} PUBLIC glad)
 
 add_subdirectory(../external/glm ${CMAKE_CURRENT_BINARY_DIR}/glm)
-target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glm)
+target_link_libraries(${ENGINE_PROJECT_NAME} PUBLIC glm)
 
 set(IMGUI_INCLUDES
 					../external/imgui/imgui.h
@@ -89,3 +121,7 @@ target_include_directories(ImGui PUBLIC ../external/imgui)
 target_link_libraries(ImGui PRIVATE glad glfw)
 
 target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE ImGui)
+
+set(GLFWPP_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # disable building GLFWPP examples
+add_subdirectory(../external/glfwpp ${CMAKE_CURRENT_BINARY_DIR}/glfwpp)
+target_link_libraries(${ENGINE_PROJECT_NAME} PUBLIC GLFWPP)
