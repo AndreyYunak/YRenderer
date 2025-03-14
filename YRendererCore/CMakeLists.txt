@@ -120,7 +120,7 @@ target_include_directories(ImGui PUBLIC ../external)
 target_include_directories(ImGui PUBLIC ../external/imgui)
 target_link_libraries(ImGui PRIVATE glad glfw)
 
-target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE ImGui)
+target_link_libraries(${ENGINE_PROJECT_NAME} PUBLIC ImGui)
 
 set(GLFWPP_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # disable building GLFWPP examples
 add_subdirectory(../external/glfwpp ${CMAKE_CURRENT_BINARY_DIR}/glfwpp)

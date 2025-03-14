@@ -1,7 +1,7 @@
 #pragma once
 
 #include "YRendererCore/Application.hpp"
-#include "YRendererCore/Scene.h"
+
 
 #include <glad/gl.h>
 
@@ -16,10 +16,60 @@
 #include <cmath>
 
 
+
 namespace YRenderer {
+
+  void cleanupImgui()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+
+template<typename Func>
+void renderImgui(Func&& guiRenderFunc_)
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    guiRenderFunc_();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+   /* if(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        glfw::Window& backupCurrentContext = glfw::getCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfw::makeContextCurrent(backupCurrentContext);
+    } */
+}
+
+void initImgui(const glfw::Window& wnd)
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+
+    ImGui_ImplGlfw_InitForOpenGL(wnd, true);
+    ImGui_ImplOpenGL3_Init();
+}
+
+
 
 	Application::Application()
 	{
+
 	}
 
 	Application::~Application()
@@ -28,67 +78,17 @@ namespace YRenderer {
 
 	int Application::start(unsigned int window_width, unsigned int window_height, const char* title)
     {
+        
         [[maybe_unused]] glfw::GlfwLibrary library = glfw::init();
-
         glfw::WindowHints hints;
         hints.clientApi = glfw::ClientApi::OpenGl;
         hints.contextVersionMajor = 4;
         hints.contextVersionMinor = 6;
-        hints.apply();
-        // Or with C++20:
-        //glfw::WindowHints{
-        //        .clientApi = glfw::ClientApi::OpenGl,
-        //        .contextVersionMajor = 4,
-        //        .contextVersionMinor = 6}
-        //        .apply();
-        glfw::Window wnd(800, 600, "GLFWPP basic example");
+        hints.apply();    
 
-        //m_pWindow = std::make_unique<Window>(title, window_width, window_height);
+        wnd = std::make_unique<glfw::Window>(800, 600, "GLFWPP basic example");
         
-        YRenderer::Camera camera(glm::vec3(30.0f, 30.0f, 30.0f));
-        //m_pWindow->camera = &camera; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-        /*
-        m_event_dispatcher.add_event_listener<EventMouseMoved>(
-            [](EventMouseMoved& event)
-            {
-                //LOG_INFO("[MouseMoved] Mouse moved to {0}x{1}", event.x, event.y);
-            });
-
-        m_event_dispatcher.add_event_listener<EventWindowResize>(
-            [](EventWindowResize& event)
-            {
-                //LOG_INFO("[Resized] Changed size to {0}x{1}", event.height, event.height);
-            });
-
-        m_event_dispatcher.add_event_listener<EventWindowClose>(
-            [&](EventWindowClose& event)
-            {
-                //LOG_INFO("[WindowClose]");
-                m_bCloseWindow = true;
-            });
-
-        m_pWindow->set_event_callback(
-            [&](BaseEvent& event)
-            {
-                //LOG_INFO("[EVENT] Changed size to {0}x{1}", event.width, event.height);
-                //std::cout << "Changed size to " << event.width << ", " << event.height <<  std::endl;
-                m_event_dispatcher.dispatch(event);
-            }
-        );
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true); //comment this in RELEASE!
-
-        m_pWindow->CreateWindow(window_width, window_height, title);
-        */
-
-        /* Make the window's context current */
-        //m_pWindow->MakeContextCurrent();
-        glfw::makeContextCurrent(wnd);
+        glfw::makeContextCurrent(*wnd);
         int version = gladLoadGL(glfwGetProcAddress); //if (glewInit() != GLEW_OK)
         if (version == 0) {
             std::cout << "Failed to initialize OpenGL context\n";
@@ -96,10 +96,43 @@ namespace YRenderer {
             // return -1;
         }
         
+        initImgui(*wnd);
         
-        scene::Scene* currentScene = nullptr;
-        scene::SceneMenu* sceneMenu = new scene::SceneMenu(currentScene);
+        YRenderer::Camera camera(glm::vec3(30.0f, 30.0f, 30.0f));
+
+
+        wnd->framebufferSizeEvent.setCallback([](glfw::Window&, int width, int height) {
+          glViewport(0, 0, width, height);
+        });
+        wnd->keyEvent.setCallback([&](glfw::Window&, glfw::KeyCode keyCode_, int scanCode_, glfw::KeyState state_, glfw::ModifierKeyBit modifiers_) {
+          bool val = true;
+          if(modifiers_ & glfw::ModifierKeyBit::Control)
+          {
+              val = false;
+          }
+          switch(keyCode_)
+          {
+              case glfw::KeyCode::F:
+                  wnd->setAttribFloating(val);
+                  break;
+              case glfw::KeyCode::R:
+                  wnd->setAttribResizable(val);
+                  break;
+              case glfw::KeyCode::D:
+                  wnd->setAttribDecorated(val);
+                  break;
+              default:
+                  break;
+          }
+        });
+      
+        
+        
+        
+
         currentScene = sceneMenu;
+        //sceneShader = new Shader("./Shader/shader_texture.vs", "./Shader/shader_texture.frag");
+        
         //scene::SceneTest sceneTest();
         //SceneTextureSimple
 
@@ -108,7 +141,7 @@ namespace YRenderer {
         //sceneMenu->RegScene<scene::SceneTexture>("SceneTexture");
         //sceneMenu->RegScene<scene::SceneTextureSimple>("SceneTextureSimple");
 
-        Shader* sceneShader = new Shader("./Shader/shader_texture.vs", "./Shader/shader_texture.frag");
+    /*    
         float vertices[32] = {
             // positions          // colors           // texture coords
              0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
@@ -142,32 +175,49 @@ namespace YRenderer {
 		// texture coord attribute
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
+*/
 
-		sceneShader->use();
 		
         // Window::WindowHint(YRenderer::WindowHints::DOUBLEBUFFER, 1);
             
-        while (!wnd.shouldClose())
+        while (!wnd->shouldClose())
         {
             double time = glfw::getTime();
             glClearColor((sin(time) + 1.0) / 2.0, (cos(time) + 1.0) / 2.0, (-sin(time) + 1.0) / 2.0, 0.0);
             glClear(GL_COLOR_BUFFER_BIT);
+            
+            
+            //wnd.setTitle(std::to_string(glfw::getTime()).c_str());
 
-            //m_pWindow->on_update_begin();
+            if(!wnd->getAttribFocused())
+            {   
+              wnd->requestAttention();
+            }
+            
+
+
             on_update();
            
-/*
+
             // render container
-            sceneShader->use();
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            //sceneShader->use();
+            
+            //currentScene->onImGuiRender();
+            
+            //glBindVertexArray(VAO);
+            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
             //m_pWindow->on_update_end();
-            */
+            
+            renderImgui([]() {
+              ImGui::ShowDemoWindow();
+            });
+
+
 
             glfw::pollEvents();
-            wnd.swapBuffers();
+            wnd->swapBuffers();
         }
-        //m_pWindow = nullptr;
+        cleanupImgui();
         
         return 0;
     }
